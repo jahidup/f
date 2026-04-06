@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NULL PROTOCOL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+/* ===== SAME STYLE AS BEFORE ===== */
+:root {
+    --bg: #050814;
+    --panel: rgba(15,23,42,0.95);
+    --glass: rgba(15,23,42,0.7);
+    --border: rgba(148,163,184,0.4);
+    --accent: #00E1FF;
+    --accent2: #00FFC6;
+    --text: #E5F0FF;
+    --muted: #94A3B8;
+    --success: #22C55E;
+    --danger: #FB7185;
+    --warning: #FBBF24;
+    --radius: 14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ===== GLOBAL BACKGROUND ===== */
+body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at 20% 0%, #0ea5e9 0, transparent 55%),
+                radial-gradient(circle at 80% 100%, #22c55e22 0, transparent 55%),
+                #020617;
+    color: var(--text);
+    overflow-x: hidden;
+}
+
+/* Moving grid */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(148,163,184,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,0.06) 1px, transparent 1px);
+    background-size: 42px 42px;
+    opacity: 0.9;
+    animation: gridMove 30s linear infinite;
+    pointer-events: none;
+    z-index: -2;
+}
+@keyframes gridMove {
+    from { transform: translate3d(0,0,0); }
+    to   { transform: translate3d(-42px,-42px,0); }
+}
+
+/* Soft glow layer */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 10% 90%, rgba(56,189,248,0.25), transparent 60%),
+      radial-gradient(circle at 90% 10%, rgba(34,197,94,0.18), transparent 60%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ===== ADMIN LOGIN OVERLAY ===== */
+#adminLogin {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 20% 0%, rgba(56,189,248,0.35), transparent 55%),
+                radial-gradient(circle at 80% 100%, rgba(34,197,94,0.35), transparent 55%),
+                #020617f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+#adminLogin.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease-out;
+}
+
+.login-card {
+    width: 320px;
+    max-width: 90vw;
+    background: rgba(15,23,42,0.95);
+    border-radius: 18px;
+    border: 1px solid rgba(148,163,184,0.45);
+    box-shadow: 0 20px 45px rgba(15,23,42,0.95);
+    padding: 22px 20px 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background:
+      radial-gradient(circle at 0 0, rgba(56,189,248,0.22), transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(34,197,94,0.18), transparent 55%);
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.login-inner { position: relative; z-index: 1; }
+
+.login-title { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.login-title-icon {
+    width: 30px; height: 30px; border-radius: 999px;
+    background: radial-gradient(circle at 30% 0%, #e0f2fe, #0284c7);
+    display: flex; align-items: center; justify-content: center;
+    color: #020617; box-shadow: 0 0 18px rgba(56,189,248,0.9);
+}
+.login-title-text { font-size: 16px; font-weight: 600; }
+.login-sub { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px; }
+.login-field-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.login-input {
+    width: 100%; background: #020617; border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.5); padding: 9px 12px;
+    font-size: 13px; color: var(--text); outline: none; margin-bottom: 10px; box-sizing: border-box;
+}
+.login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(56,189,248,0.6); }
+.login-btn {
+    width: 100%; margin-top: 4px; padding: 10px 12px; border-radius: 999px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #020617;
+    font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;
+    justify-content: center; gap: 8px; box-shadow: 0 12px 28px rgba(8,47,73,0.95);
+}
+.login-error { margin-top: 6px; font-size: 11px; color: var(--danger); min-height: 14px; }
+.login-meta { margin-top: 8px; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; }
+.shake { animation: shake 0.35s ease; }
+@keyframes shake {
+    0% { transform: translateX(0); } 25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } 100% { transform: translateX(0); }
+}
+
+/* ===== APP LAYOUT ===== */
+.app {
+    display: none;
+    min-height: 100vh;
+}
+.app.visible { display: flex; }
+
+/* ===== MOBILE HEADER ===== */
+.mobile-header {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+}
+.mobile-menu-btn {
+    background: transparent; border: none; color: var(--text); font-size: 20px; cursor: pointer;
+}
+.mobile-logo-text { font-weight: 700; font-size: 16px; letter-spacing: 1px; color: var(--accent); }
+
+/* ===== SIDEBAR - FIXED SCROLLING ISSUE ===== */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.95));
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--border);
+}
+
+.sidebar-content {
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sidebar-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 15px;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,163,184,0.6) rgba(15,23,42,0.95);
+}
+
+.sidebar-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-scrollable::-webkit-scrollbar-track {
+    background: rgba(15,23,42,0.95);
+    border-radius: 10px;
+}
+.sidebar-scrollable::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.6);
+    border-radius: 10px;
+}
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(148,163,184,0.8);
+}
+
+.logo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.logo-icon {
+    width: 32px; height: 32px; border-radius: 999px;
+    background: radial-gradient(circle at 30% 0%, #e0f2fe, #0ea5e9);
+    display: flex; align-items: center; justify-content: center;
+    color: #0b1120; box-shadow: 0 0 18px rgba(56,189,248,0.9);
+}
+.logo-text-main { font-size: 16px; font-weight: 600; }
+.logo-text-sub { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+
+.menu-item {
+    padding: 10px 12px; border-radius: 999px; display: flex; align-items: center;
+    gap: 10px; color: var(--muted); font-size: 13px; cursor: pointer;
+    margin-bottom: 6px; transition: 0.18s;
+}
+.menu-item i { font-size: 14px; width: 20px; text-align: center; }
+.menu-item:hover { background: rgba(15,23,42,0.95); color: var(--text); }
+.menu-item.active {
+    background: radial-gradient(circle at 0 0, rgba(56,189,248,0.6), transparent 65%);
+    color: var(--accent); box-shadow: 0 0 16px rgba(56,189,248,0.6);
+}
+
+.sidebar-footer {
+    margin-top: 15px; font-size: 11px; color: var(--muted);
+    padding-top: 8px; border-top: 1px dashed rgba(148,163,184,0.4);
+}
+
+.social-links { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
+.social-link {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: 8px; background: rgba(2, 8, 23, 0.7); border: 1px solid rgba(56, 189, 248, 0.2);
+    color: var(--muted); font-size: 11px; text-decoration: none; transition: 0.2s;
+}
+.social-link:hover {
+    background: rgba(56, 189, 248, 0.1); color: var(--accent); border-color: rgba(56, 189, 248, 0.4);
+}
+.social-link i { width: 16px; text-align: center; }
+
+.close-sidebar-btn {
+    display: none; position: absolute; top: 15px; right: 15px;
+    background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.main { flex: 1; padding: 22px 28px 40px; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+.top-title { font-size: 18px; font-weight: 600; }
+.top-sub { font-size: 12px; color: var(--muted); }
+
+.status-pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid rgba(34,197,94,0.4); background: rgba(22,163,74,0.16);
+    font-size: 11px; color: var(--success);
+}
+.status-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--success); box-shadow: 0 0 10px rgba(34,197,94,1); }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1.2fr); gap: 18px; }
+
+@media (max-width: 900px) {
+    .app { flex-direction: column; margin-top: 60px; }
+    .mobile-header { display: flex; }
+    .sidebar {
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+        width: 280px;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.8);
+    }
+    .sidebar.active { transform: translateX(0); }
+    .close-sidebar-btn { display: block; }
+    .menu-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(3px);
+        z-index: 900; display: none;
+    }
+    .menu-overlay.active { display: block; }
+    .main { padding: 14px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .status-pill { align-self: flex-start; }
+    .sidebar-scrollable { padding-right: 0; padding-bottom: 20px; }
+}
+
+/* CARDS & INPUTS */
+.card {
+    background: var(--panel); border-radius: var(--radius); border: 1px solid var(--border);
+    padding: 18px 18px 16px; box-shadow: 0 18px 35px rgba(15,23,42,0.95);
+    position: relative; overflow: hidden;
+}
+.card::before {
+    content:""; position:absolute; inset:-40%;
+    background: radial-gradient(circle at 0 0, rgba(56,189,248,0.18), transparent 60%),
+                radial-gradient(circle at 100% 100%, rgba(16,185,129,0.15), transparent 60%);
+    opacity:0.7; pointer-events:none;
+}
+.card-inner { position:relative; z-index:1; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card-title { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
+.card-title i { color:var(--accent); }
+.input-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
+.input-box {
+    width: 100%; background: #020617; border: 1px solid rgba(148,163,184,0.5);
+    border-radius: 999px; color: var(--text); padding: 11px 13px; font-size: 14px;
+    outline: none; font-family: monospace; box-sizing: border-box;
+}
+.input-box:focus { border-color: var(--accent); }
+
+.action-btn {
+    width: 100%; margin-top: 12px; padding: 11px 14px; border-radius: 999px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #020617;
+    font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; cursor: pointer; box-shadow: 0 10px 24px rgba(8,47,73,0.9); transition: 0.16s;
+}
+.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.error-text { font-size: 11px; margin-top: 4px; color: var(--danger); }
+
+/* TERMINAL & RESULTS */
+.terminal {
+    margin-top: 16px; background: #020617; border-radius: 10px; border: 1px solid rgba(30,64,175,0.7);
+    padding: 10px; font-family: monospace; font-size: 12px; height: 160px; overflow-y: auto;
+}
+.term-line-time { color: #64748b; }
+.term-line-error { color: var(--danger); }
+.term-line-success { color: var(--success); }
+.term-line-warning { color: var(--warning); }
+
+.result-container {
+    margin-top: 16px; background: #020617; border-radius: 10px; border: 1px solid rgba(34,197,94,0.3);
+    padding: 15px; max-height: 300px; overflow-y: auto; display: none;
+}
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.result-title { font-size: 13px; color: var(--success); display: flex; align-items: center; gap: 8px; }
+.copy-btn {
+    background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;
+    border-radius: 6px; padding: 6px 12px; font-size: 11px; cursor: pointer; display: flex;
+    align-items: center; gap: 6px;
+}
+.copy-btn.copied { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); color: #22c55e; }
+
+.result-json {
+    background: rgba(0, 0, 0, 0.5); border-radius: 8px; padding: 12px;
+    font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 11px; line-height: 1.4;
+    white-space: pre-wrap; word-wrap: break-word; border: 1px solid rgba(148,163,184,0.2); overflow-x: auto;
+}
+.json-key { color: #38bdf8; }
+.json-string { color: #22c55e; }
+.json-number { color: #fbbf24; }
+.json-boolean { color: #22c55e; }
+.json-null { color: #94a3b8; }
+.json-bracket { color: #c084fc; }
+
+.credit-line {
+    margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(148,163,184,0.3);
+    font-size: 11px; color: var(--muted); text-align: center;
+}
+
+/* SCAN OVERLAY */
+.scan-overlay {
+    position:absolute; inset:0; background:rgba(15,23,42,0.96); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; z-index:5; backdrop-filter:blur(4px); border-radius: inherit;
+}
+.scan-overlay.hidden { display:none; }
+.radar {
+    width:120px; height:120px; border-radius:999px; border:1px solid rgba(148,163,184,0.6);
+    background:radial-gradient(circle, rgba(56,189,248,0.2) 0, transparent 60%); position:relative; overflow:hidden;
+}
+.radar::before {
+    content:""; position:absolute; inset:0;
+    background:conic-gradient(from 0deg, rgba(56,189,248,0.8), transparent 40%, transparent 100%);
+    animation: radarSweep 1.1s linear infinite;
+}
+.radar::after { content:""; position:absolute; inset:20%; border-radius:999px; border:1px solid rgba(15,23,42,0.7); }
+@keyframes radarSweep { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.scan-text { margin-top:12px; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+
+/* METRICS */
+.metrics-row {
+    display:flex; justify-content:space-between; align-items:flex-start; font-size:12px;
+    border-bottom:1px dashed rgba(148,163,184,0.4); padding:6px 0; gap:10px;
+}
+.metrics-label { color:var(--muted); }
+.metrics-value { font-family:monospace; text-align:right; }
+.metrics-sub { display:block; font-size:11px; color:var(--muted); }
+
+/* TABLES */
+.table-wrap { margin-top:10px; max-height:320px; overflow:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+thead { background:#020617; position:sticky; top:0; z-index:1; }
+th,td { padding:7px 8px; border-bottom:1px solid rgba(30,64,175,0.5); text-align:left; }
+th { color:var(--muted); font-weight:500; }
+tbody tr:hover td { background:rgba(15,23,42,0.9); }
+.link-button { border:none; background:transparent; color:#38bdf8; cursor:pointer; font-size:11px; text-decoration:underline; }
+.empty-text { margin-top:10px; font-size:12px; color:var(--muted); }
+
+/* DISCLAIMER */
+.disclaimer {
+    margin-top: 20px; padding: 15px; background: rgba(251, 113, 133, 0.1); border: 1px solid rgba(251, 113, 133, 0.3);
+    border-radius: 10px; font-size: 11px; color: var(--muted); line-height: 1.5;
+}
+.disclaimer-title { color: var(--warning); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+
+/* FOOTER */
+.footer {
+    margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(148,163,184,0.2);
+    font-size: 11px; color: var(--muted); text-align: center;
+}
+
+/* LOADING ANIMATION */
+.loading-spinner {
+    width: 20px; height: 20px; border: 2px solid rgba(56,189,248,0.3); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* NOTIFICATION */
+.notification {
+    position: fixed; top: 20px; right: 20px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 10px; z-index: 10000; transform: translateX(150%); transition: transform 0.3s ease;
+}
+.notification.show { transform: translateX(0); }
+.notification-success { border-color: var(--success); }
+.notification-error { border-color: var(--danger); }
+.notification-warning { border-color: var(--warning); }
+</style>
+</head>
+<body>
+
+<!-- ===== ADMIN LOGIN OVERLAY ===== -->
+<div id="adminLogin">
+    <div class="login-card" id="loginCard">
+        <div class="login-inner">
+            <div class="login-title">
+                <div class="login-title-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="login-title-text">Admin Authentication</div>
+            </div>
+            <div class="login-sub">Restricted console · level-3</div>
+
+            <div class="login-field-label">Admin ID</div>
+            <input id="admUser" class="login-input" placeholder="admin">
+            <div class="login-field-label">Password</div>
+            <input id="admPass" type="password" class="login-input" placeholder="••••••••">
+            <div class="login-field-label">4-digit PIN</div>
+            <input id="admPin" class="login-input" maxlength="4" placeholder="4321">
+            <div class="login-field-label">Security Key</div>
+            <input id="admKey" class="login-input" placeholder="REFLEX-ROOT">
+
+            <button class="login-btn" id="loginBtn">
+                <i class="fa-solid fa-right-to-bracket"></i> Grant Access
+            </button>
+            <div id="loginError" class="login-error"></div>
+            <div class="login-meta">
+                <span id="attemptInfo">Attempts left: 5</span>
+                <span>⚡Powered by Null Protocol</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== NOTIFICATION ===== -->
+<div id="notification" class="notification">
+    <i class="fa-solid fa-circle-info"></i>
+    <span id="notificationMessage">Message</span>
+</div>
+
+<!-- ===== MOBILE MENU OVERLAY ===== -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- ===== MOBILE HEADER ===== -->
+<div class="mobile-header">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="mobile-logo-text">NULL PROTOCOL</div>
+    <div style="width: 20px;"></div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app" id="appRoot">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <button class="close-sidebar-btn" id="closeSidebarBtn">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="sidebar-content">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                <div>
+                    <div class="logo-text-main">NULL PROTOCOL</div>
+                    <div class="logo-text-sub">Super Intelligence Console</div>
+                </div>
+            </div>
+
+            <div class="sidebar-scrollable">
+                <div class="menu-item active" data-tab="phoneTab">
+                    <i class="fa-solid fa-phone"></i> Phone Lookup
+                </div>
+                <div class="menu-item" data-tab="aadhaarTab">
+                    <i class="fa-solid fa-id-card"></i> Aadhaar Lookup
+                </div>
+                <div class="menu-item" data-tab="rationTab">
+                    <i class="fa-solid fa-wheat-awn"></i> Ration Lookup
+                </div>
+                <div class="menu-item" data-tab="vehicleTab">
+                    <i class="fa-solid fa-car"></i> Vehicle RC Lookup
+                </div>
+                <div class="menu-item" data-tab="vehicleChalanTab">
+                    <i class="fa-solid fa-car-burst"></i> Vehicle Chalan
+                </div>
+                <div class="menu-item" data-tab="vehicleProTab">
+                    <i class="fa-solid fa-motorcycle"></i> Vehicle Pro
+                </div>
+                <div class="menu-item" data-tab="ifscTab">
+                    <i class="fa-solid fa-building-columns"></i> IFSC Lookup
+                </div>
+                <div class="menu-item" data-tab="emailTab">
+                    <i class="fa-solid fa-envelope"></i> Email Lookup
+                </div>
+                <div class="menu-item" data-tab="pincodeTab">
+                    <i class="fa-solid fa-map-marker-alt"></i> Pincode Lookup
+                </div>
+                <div class="menu-item" data-tab="gstTab">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> GST Lookup
+                </div>
+                <div class="menu-item" data-tab="tgNumTab">
+                    <i class="fa-brands fa-telegram"></i> Telegram to Number
+                </div>
+                <div class="menu-item" data-tab="ipInfoTab">
+                    <i class="fa-solid fa-network-wired"></i> IP Info
+                </div>
+                <div class="menu-item" data-tab="ffInfoTab">
+                    <i class="fa-solid fa-gamepad"></i> Free Fire Info
+                </div>
+                <div class="menu-item" data-tab="ffBanTab">
+                    <i class="fa-solid fa-ban"></i> Free Fire Ban Check
+                </div>
+                <div class="menu-item" data-tab="tgInfoProTab">
+                    <i class="fa-brands fa-telegram"></i> Telegram Info Pro
+                </div>
+                <div class="menu-item" data-tab="tgInfoTab">
+                    <i class="fa-brands fa-telegram"></i> Telegram Info
+                </div>
+                <div class="menu-item" data-tab="instaInfoTab">
+                    <i class="fa-brands fa-instagram"></i> Instagram Info
+                </div>
+                <div class="menu-item" data-tab="githubInfoTab">
+                    <i class="fa-brands fa-github"></i> GitHub Info
+                </div>
+                <div class="menu-item" data-tab="historyTab">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History
+                </div>
+
+                <div class="social-links">
+                    <a href="https://www.youtube.com/@ArkAadil2." target="_blank" class="social-link">
+                        <i class="fab fa-youtube"></i> YouTube
+                    </a>
+                    <a href="https://instagram.com/osint_lookup" target="_blank" class="social-link">
+                        <i class="fab fa-instagram"></i> Instagram
+                    </a>
+                    <a href="https://t.me/osint_lookup" target="_blank" class="social-link">
+                        <i class="fab fa-telegram"></i> Telegram
+                    </a>
+                    <a href="https://t.me/NullProtocol_X" target="_blank" class="social-link">
+                        <i class="fa-solid fa-circle-question"></i> Contact
+                    </a>
+                </div>
+
+                <div class="sidebar-footer">
+                    System ID: <span id="sysId">SYS-0000</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="top-title" id="currentTabTitle">Phone Lookup Panel</div>
+                <div class="top-sub" id="currentTabSub">Direct API access with real-time results</div>
+            </div>
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
+            </div>
+        </header>
+
+        <!-- ===== ALL TABS (SAME AS ORIGINAL) ===== -->
+        <!-- PHONE TAB -->
+        <section id="phoneTab" class="tab">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="phoneScanOverlay">
+                        <div class="radar"></div>
+                        <div class="scan-text">scanning phone number...</div>
+                    </div>
+                    <div class="card-inner">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-mobile-screen-button"></i><span>Phone Number Lookup</span></div>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER PHONE NUMBER</div>
+                            <input id="phoneInput" class="input-box" placeholder="Ex: 9876543210" maxlength="15">
+                            <div id="phoneInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="phoneSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH PHONE DETAILS</button>
+                            <div id="phoneResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyPhoneResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="phoneResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                            <div id="terminal" class="terminal">
+                                ▶ System initialized...
+                                <br>▶ Select a lookup type and enter data...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-network-wired"></i><span>Connection Metrics</span></div></div>
+                        <div class="card-body">
+                            <div class="metrics-row"><span class="metrics-label">IP ADDRESS</span><span class="metrics-value" id="userIP">Detecting...</span></div>
+                            <div class="metrics-row"><span class="metrics-label">TIME ZONE</span><span class="metrics-value"><span id="timeZone">Resolving...</span> <span id="timeClock" class="metrics-sub"></span></span></div>
+                            <div class="metrics-row"><span class="metrics-label">BATTERY</span><span class="metrics-value"><span id="batteryMain">Checking...</span> <span id="batteryStatus" class="metrics-sub"></span></span></div>
+                            <div class="metrics-row"><span class="metrics-label">DEVICE MODEL</span><span class="metrics-value" id="deviceModel">Estimating...</span></div>
+                            <div class="metrics-row"><span class="metrics-label">CONNECTION</span><span class="metrics-value" id="connType">Detecting...</span></div>
+                            <div class="metrics-row"><span class="metrics-label">RAM (est.)</span><span class="metrics-value" id="ramInfo">—</span></div>
+                            <div class="metrics-row"><span class="metrics-label">CPU SCORE</span><span class="metrics-value" id="cpuScore">—</span></div>
+                            <div class="metrics-row"><span class="metrics-label">BROWSER FINGERPRINT</span><span class="metrics-value" id="bfScore">—</span></div>
+                            <div class="metrics-row"><span class="metrics-label">SCREEN</span><span class="metrics-value" id="screenMetrics">—</span></div>
+                            <div class="metrics-row"><span class="metrics-label">STORAGE (est.)</span><span class="metrics-value" id="storageInfo">—</span></div>
+                            <div class="empty-text" style="margin-top:10px;">Metrics are computed locally. All lookups are secured via backend API.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AADHAAR TAB -->
+        <section id="aadhaarTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="aadhaarScanOverlay"><div class="radar"></div><div class="scan-text">fetching aadhaar details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-id-card"></i><span>Aadhaar Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER AADHAAR NUMBER</div>
+                            <input id="aadhaarInput" class="input-box" placeholder="Ex: 123456789012" maxlength="12" type="number">
+                            <div id="aadhaarInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="aadhaarSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH AADHAAR DETAILS</button>
+                            <div id="aadhaarResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyAadhaarResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="aadhaarResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Aadhaar Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Aadhaar?</strong><br>Aadhaar is a 12-digit unique identification number issued by the UIDAI to residents of India.</div><div class="empty-text" style="margin-top:10px;"><strong>Format:</strong> 123456789012<br>• First digit: Random (not 0 or 1)<br>• Verhoeff algorithm for checksum<br>• No intelligence in number</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- RATION TAB -->
+        <section id="rationTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="rationScanOverlay"><div class="radar"></div><div class="scan-text">fetching ration details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-wheat-awn"></i><span>Ration Card Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER AADHAAR NUMBER</div>
+                            <input id="rationInput" class="input-box" placeholder="Ex: 123456789012" maxlength="12" type="number">
+                            <div id="rationInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="rationSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH RATION DETAILS</button>
+                            <div id="rationResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyRationResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="rationResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Ration Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Ration Card?</strong><br>Ration card is a document issued by state governments to households for purchasing subsidized food grains under the Public Distribution System.</div><div class="empty-text" style="margin-top:10px;"><strong>Types of Ration Cards:</strong><br>• AAY: Antyodaya Anna Yojana<br>• BPL: Below Poverty Line<br>• APL: Above Poverty Line</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- VEHICLE RC TAB -->
+        <section id="vehicleTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="vehicleScanOverlay"><div class="radar"></div><div class="scan-text">scanning vehicle details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-car"></i><span>Vehicle RC Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER VEHICLE REGISTRATION NUMBER</div>
+                            <input id="vehicleInput" class="input-box" placeholder="Ex: MH12AB1234" maxlength="20">
+                            <div id="vehicleInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="vehicleSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH VEHICLE DETAILS</button>
+                            <div id="vehicleResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyVehicleResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="vehicleResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Vehicle Lookup Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Vehicle RC?</strong><br>Vehicle Registration Certificate (RC) contains details like owner name, vehicle model, registration date, insurance status and more.</div><div class="empty-text" style="margin-top:10px;"><strong>Supported Formats:</strong><br>• MH12AB1234 (Maharashtra)<br>• DL4CAB1234 (Delhi)<br>• KA01AB1234 (Karnataka)<br>• All Indian states RTO codes</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- VEHICLE CHALAN TAB -->
+        <section id="vehicleChalanTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="vehicleChalanScanOverlay"><div class="radar"></div><div class="scan-text">checking vehicle challan...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-car-burst"></i><span>Vehicle Challan Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER VEHICLE REGISTRATION NUMBER</div>
+                            <input id="vehicleChalanInput" class="input-box" placeholder="Ex: MH12AB1234" maxlength="20">
+                            <div id="vehicleChalanInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="vehicleChalanSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> CHECK CHALLAN DETAILS</button>
+                            <div id="vehicleChalanResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyVehicleChalanResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="vehicleChalanResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Challan Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Vehicle Challan?</strong><br>Vehicle challan lookup helps you check traffic violation fines, pending challans, and payment status for any vehicle registered in India.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Traffic violation details<br>• Fine amounts<br>• Payment status<br>• Violation location & date</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- VEHICLE PRO TAB -->
+        <section id="vehicleProTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="vehicleProScanOverlay"><div class="radar"></div><div class="scan-text">scanning vehicle pro details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-motorcycle"></i><span>Vehicle Pro Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER VEHICLE REGISTRATION NUMBER</div>
+                            <input id="vehicleProInput" class="input-box" placeholder="Ex: MH12AB1234" maxlength="20">
+                            <div id="vehicleProInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="vehicleProSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH VEHICLE PRO DETAILS</button>
+                            <div id="vehicleProResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyVehicleProResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="vehicleProResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Vehicle Pro Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Vehicle Pro?</strong><br>Vehicle Pro provides advanced vehicle information including owner contact details, comprehensive vehicle history, and additional metadata.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Owner contact information<br>• Comprehensive vehicle history<br>• Previous owners (if available)<br>• Additional registration details</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- IFSC TAB -->
+        <section id="ifscTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="ifscScanOverlay"><div class="radar"></div><div class="scan-text">fetching bank details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-building-columns"></i><span>IFSC Code Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER IFSC CODE</div>
+                            <input id="ifscInput" class="input-box" placeholder="Ex: SBIN0001234" maxlength="11">
+                            <div id="ifscInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="ifscSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH BANK DETAILS</button>
+                            <div id="ifscResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyIfscResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="ifscResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>IFSC Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is IFSC?</strong><br>Indian Financial System Code (IFSC) is an 11-character code that identifies bank branches participating in RBI's electronic payment systems.</div><div class="empty-text" style="margin-top:10px;"><strong>Format:</strong> XXXX0XXXXXX<br>• First 4 characters: Bank code<br>• Fifth character: 0 (zero)<br>• Last 6 characters: Branch code</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- EMAIL TAB -->
+        <section id="emailTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="emailScanOverlay"><div class="radar"></div><div class="scan-text">analyzing email address...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-envelope"></i><span>Email Address Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER EMAIL ADDRESS</div>
+                            <input id="emailInput" class="input-box" placeholder="Ex: example@gmail.com" type="email">
+                            <div id="emailInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="emailSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH EMAIL DETAILS</button>
+                            <div id="emailResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyEmailResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="emailResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-shield-halved"></i><span>Privacy Notice</span></div></div><div class="card-body"><div class="empty-text"><strong>Ethical Use Only</strong><br>This tool is designed for security research, OSINT investigations, and legitimate verification purposes only.</div><div class="empty-text" style="margin-top:10px;"><strong>Data Protection</strong><br>All API calls are secured via backend. No API keys are exposed to users.</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- PINCODE TAB -->
+        <section id="pincodeTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="pincodeScanOverlay"><div class="radar"></div><div class="scan-text">fetching pincode details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-map-marker-alt"></i><span>Pincode Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER 6-DIGIT PINCODE</div>
+                            <input id="pincodeInput" class="input-box" placeholder="Ex: 400001" maxlength="6" type="number">
+                            <div id="pincodeInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="pincodeSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH PINCODE DETAILS</button>
+                            <div id="pincodeResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyPincodeResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="pincodeResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Pincode Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Pincode?</strong><br>Postal Index Number (PIN) is a 6-digit code used by India Post for efficient mail delivery. Each pincode corresponds to a specific geographic region.</div><div class="empty-text" style="margin-top:10px;"><strong>First Digit Meaning:</strong><br>• 1: Delhi, Haryana, Punjab<br>• 2: Uttar Pradesh, Uttarakhand<br>• 3: Rajasthan, Gujarat<br>• 4: Maharashtra, Goa<br>• 5: Andhra, Telangana<br>• 6: Karnataka, Kerala</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- GST TAB -->
+        <section id="gstTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="gstScanOverlay"><div class="radar"></div><div class="scan-text">fetching GST details...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i><span>GST Number Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER GST NUMBER</div>
+                            <input id="gstInput" class="input-box" placeholder="Ex: 27AAAAA0000A1Z5" maxlength="15">
+                            <div id="gstInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="gstSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH GST DETAILS</button>
+                            <div id="gstResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyGstResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="gstResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>GST Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is GST?</strong><br>Goods and Services Tax (GST) is a 15-digit identification number assigned to businesses registered under GST. It contains state code, PAN number, entity code and checksum digit.</div><div class="empty-text" style="margin-top:10px;"><strong>Format:</strong> 27AAAAA0000A1Z5<br>• First 2 digits: State code<br>• Next 10 digits: PAN number<br>• 13th digit: Entity number<br>• 14th digit: 'Z' by default<br>• 15th digit: Checksum digit</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- TELEGRAM TO NUMBER TAB -->
+        <section id="tgNumTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="tgNumScanOverlay"><div class="radar"></div><div class="scan-text">searching telegram...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-brands fa-telegram"></i><span>Telegram Number Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER TELEGRAM USER ID</div>
+                            <input id="tgNumInput" class="input-box" placeholder="Ex: 123456789" maxlength="15">
+                            <div id="tgNumInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="tgNumSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH TELEGRAM PROFILE</button>
+                            <div id="tgNumResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyTgNumResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="tgNumResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-shield-halved"></i><span>Privacy Notice</span></div></div><div class="card-body"><div class="empty-text"><strong>Ethical Use Only</strong><br>This tool is designed for legitimate verification purposes only. Do not use for harassment or illegal activities.</div><div class="empty-text" style="margin-top:10px;"><strong>Data Protection</strong><br>All searches are logged for security purposes. Misuse may result in permanent ban.</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- IP INFO TAB -->
+        <section id="ipInfoTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="ipInfoScanOverlay"><div class="radar"></div><div class="scan-text">analyzing IP address...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-network-wired"></i><span>IP Address Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER IP ADDRESS</div>
+                            <input id="ipInfoInput" class="input-box" placeholder="Ex: 8.8.8.8" maxlength="15">
+                            <div id="ipInfoInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="ipInfoSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH IP DETAILS</button>
+                            <div id="ipInfoResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyIpInfoResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="ipInfoResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>IP Information</span></div></div><div class="card-body"><div class="empty-text"><strong>What is IP Lookup?</strong><br>IP address lookup provides detailed information about any IP address including location, ISP, organization, and network details.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Country, City, Region<br>• Internet Service Provider<br>• Organization<br>• Latitude/Longitude<br>• Timezone</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- FREE FIRE INFO TAB -->
+        <section id="ffInfoTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="ffInfoScanOverlay"><div class="radar"></div><div class="scan-text">fetching Free Fire info...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-gamepad"></i><span>Free Fire Info Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER FREE FIRE UID</div>
+                            <input id="ffInfoInput" class="input-box" placeholder="Ex: 1234567890" maxlength="20">
+                            <div id="ffInfoInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="ffInfoSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH PLAYER INFO</button>
+                            <div id="ffInfoResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyFfInfoResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="ffInfoResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Free Fire Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Free Fire Lookup?</strong><br>Free Fire player lookup provides detailed information about any Free Fire player including stats, rank, KD ratio, and more.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Player level & rank<br>• K/D ratio & win rate<br>• Total matches & wins<br>• Favorite weapons<br>• Clan information</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- FREE FIRE BAN TAB -->
+        <section id="ffBanTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="ffBanScanOverlay"><div class="radar"></div><div class="scan-text">checking ban status...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-solid fa-ban"></i><span>Free Fire Ban Check</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER FREE FIRE UID</div>
+                            <input id="ffBanInput" class="input-box" placeholder="Ex: 1234567890" maxlength="20">
+                            <div id="ffBanInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="ffBanSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> CHECK BAN STATUS</button>
+                            <div id="ffBanResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyFfBanResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="ffBanResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Ban Check Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Free Fire Ban Check?</strong><br>Check if a Free Fire player account has been banned for cheating, hacking, or violating game policies.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Account ban status<br>• Ban reason (if banned)<br>• Ban duration<br>• Last checked date<br>• Account status</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- TELEGRAM INFO PRO TAB -->
+        <section id="tgInfoProTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="tgInfoProScanOverlay"><div class="radar"></div><div class="scan-text">fetching telegram info...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-brands fa-telegram"></i><span>Telegram Info Pro Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER TELEGRAM USER ID</div>
+                            <input id="tgInfoProInput" class="input-box" placeholder="Ex: 123456789" maxlength="20">
+                            <div id="tgInfoProInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="tgInfoProSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH TELEGRAM INFO</button>
+                            <div id="tgInfoProResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyTgInfoProResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="tgInfoProResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Telegram Pro Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Telegram Info Pro?</strong><br>Advanced Telegram user lookup providing detailed information about Telegram users including profile details, activity, and more.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• User profile details<br>• Bio & description<br>• Last seen status<br>• Profile picture info<br>• Account creation date</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- TELEGRAM INFO TAB -->
+        <section id="tgInfoTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="tgInfoScanOverlay"><div class="radar"></div><div class="scan-text">fetching telegram info...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-brands fa-telegram"></i><span>Telegram Info Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER TELEGRAM USERNAME</div>
+                            <input id="tgInfoInput" class="input-box" placeholder="Ex: username" maxlength="50">
+                            <div id="tgInfoInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="tgInfoSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH TELEGRAM INFO</button>
+                            <div id="tgInfoResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyTgInfoResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="tgInfoResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Telegram Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Telegram Info?</strong><br>Telegram user lookup provides basic information about Telegram users using their username.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Username & display name<br>• Bio information<br>• Profile picture status<br>• Account type<br>• Verification status</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- INSTAGRAM INFO TAB -->
+        <section id="instaInfoTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="instaInfoScanOverlay"><div class="radar"></div><div class="scan-text">fetching instagram info...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-brands fa-instagram"></i><span>Instagram Info Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER INSTAGRAM USERNAME</div>
+                            <input id="instaInfoInput" class="input-box" placeholder="Ex: username" maxlength="50">
+                            <div id="instaInfoInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="instaInfoSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH INSTAGRAM INFO</button>
+                            <div id="instaInfoResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyInstaInfoResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="instaInfoResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>Instagram Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is Instagram Lookup?</strong><br>Instagram user lookup provides information about Instagram profiles including followers, following, posts, and more.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Profile information<br>• Follower & following count<br>• Total posts<br>• Bio & description<br>• Profile picture info</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- GITHUB INFO TAB -->
+        <section id="githubInfoTab" class="tab" style="display:none;">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="scan-overlay hidden" id="githubInfoScanOverlay"><div class="radar"></div><div class="scan-text">fetching github info...</div></div>
+                    <div class="card-inner">
+                        <div class="card-header"><div class="card-title"><i class="fa-brands fa-github"></i><span>GitHub Info Lookup</span></div></div>
+                        <div class="card-body">
+                            <div class="input-label">ENTER GITHUB USERNAME</div>
+                            <input id="githubInfoInput" class="input-box" placeholder="Ex: username" maxlength="50">
+                            <div id="githubInfoInputError" class="error-text" style="display:none;"></div>
+                            <button class="action-btn" id="githubInfoSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> SEARCH GITHUB INFO</button>
+                            <div id="githubInfoResult" class="result-container">
+                                <div class="result-header"><div class="result-title"><i class="fa-solid fa-file-code"></i> <span>JSON</span></div><button class="copy-btn" id="copyGithubInfoResult"><i class="fa-regular fa-copy"></i> Copy</button></div>
+                                <pre id="githubInfoResultData" class="result-json">Waiting for data...</pre>
+                                <div class="credit-line">Developer: Shahid Ansari | Powered by "NULL PROTOCOL"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card"><div class="card-inner"><div class="card-header"><div class="card-title"><i class="fa-solid fa-circle-info"></i><span>GitHub Info</span></div></div><div class="card-body"><div class="empty-text"><strong>What is GitHub Lookup?</strong><br>GitHub user lookup provides information about GitHub profiles including repositories, followers, contributions, and more.</div><div class="empty-text" style="margin-top:10px;"><strong>Information Provided:</strong><br>• Profile information<br>• Repository count<br>• Follower & following count<br>• Contribution history<br>• Account creation date</div></div></div></div>
+            </div>
+        </section>
+
+        <!-- HISTORY TAB -->
+        <section id="historyTab" class="tab" style="display:none;">
+            <div class="card">
+                <div class="card-inner">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> <span>Lookup History</span></div>
+                        <button class="copy-btn" id="clearHistoryBtn"><i class="fa-solid fa-trash"></i> Clear All</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="empty-text">Each successful lookup is stored locally and can be reloaded.</div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>#</th><th>Type</th><th>Query</th><th>Timestamp</th><th>Action</th></tr></thead>
+                                <tbody id="historyTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="historyEmpty" class="empty-text" style="display:none;">No history yet. Start with a lookup.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+            <div class="disclaimer-title"><i class="fa-solid fa-triangle-exclamation"></i> IMPORTANT DISCLAIMER</div>
+            This tool is intended for <strong>ethical purposes only</strong>, including:
+            <ul style="margin: 8px 0; padding-left: 20px;">
+                <li>Security research and penetration testing (with proper authorization)</li>
+                <li>Open Source Intelligence (OSINT) gathering for legitimate investigations</li>
+                <li>Educational purposes to understand information security concepts</li>
+                <li>Self-auditing and personal data verification</li>
+            </ul>
+            <strong>WARNING:</strong> Unauthorized access to personal information is illegal. Use this tool only on data you own or have explicit permission to test. The developers assume no responsibility for misuse.
+        </div>
+
+        <div class="footer">
+            <div>NULL PROTOCOL | Super Intelligence Console</div>
+            <div style="margin-top: 5px; font-size: 10px; color: #64748b;">For support contact: @NullProtocol_X | All rights reserved</div>
+        </div>
+    </main>
+</div>
+
+<script>
+// ============================================
+// RENDER BACKEND CONFIGURATION
+// ============================================
+const API_BASE_URL = '/api';
+
+// API Type Mapping (same as backend)
+const API_TYPE_MAP = {
+    PHONE: 'phone',
+    AADHAAR: 'aadhaar',
+    RATION: 'ration',
+    VEHICLE_RC: 'vehicle',
+    VEHICLE_CHALAN: 'vehicle_chalan',
+    VEHICLE_PRO: 'vehicle_pro',
+    IFSC: 'ifsc',
+    EMAIL: 'email',
+    PINCODE: 'pincode',
+    GST: 'gst',
+    TG_TO_NUM: 'tg_to_num',
+    IP_INFO: 'ip_info',
+    FF_INFO: 'ff_info',
+    FF_BAN: 'ff_ban',
+    TG_INFO_PRO: 'tg_info_pro',
+    TG_INFO: 'tg_info',
+    INSTA_INFO: 'insta_info',
+    GITHUB_INFO: 'github_info'
+};
+
+// Build API URL dynamically
+function buildApiUrl(apiType, query, token, extra) {
+    let url = `${API_BASE_URL}?action=api&type=${apiType}&query=${encodeURIComponent(query)}&token=${encodeURIComponent(token)}`;
+    if (extra) {
+        url += `&extra=${encodeURIComponent(JSON.stringify(extra))}`;
+    }
+    return url;
+}
+
+// ============================================
+// STORAGE KEY
+// ============================================
+const STORAGE_KEY = 'nullprotocol_v11_history';
+
+// ===== GLOBAL VARIABLES =====
+let attemptsLeft = 5;
+let historyEntries = [];
+
+// ============================================
+// DOM ELEMENTS
+// ============================================
+const adminLoginEl = document.getElementById('adminLogin');
+const appRootEl = document.getElementById('appRoot');
+const loginCardEl = document.getElementById('loginCard');
+const loginBtn = document.getElementById('loginBtn');
+const loginErrorEl = document.getElementById('loginError');
+const attemptInfoEl = document.getElementById('attemptInfo');
+const admUserEl = document.getElementById('admUser');
+const admPassEl = document.getElementById('admPass');
+const admPinEl = document.getElementById('admPin');
+const admKeyEl = document.getElementById('admKey');
+
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const sidebar = document.getElementById('sidebar');
+const menuOverlay = document.getElementById('menuOverlay');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+const notificationEl = document.getElementById('notification');
+const notificationMessage = document.getElementById('notificationMessage');
+
+const terminal = document.getElementById('terminal');
+
+const menuItems = document.querySelectorAll('.menu-item');
+const currentTabTitle = document.getElementById('currentTabTitle');
+const currentTabSub = document.getElementById('currentTabSub');
+
+const sysIdEl = document.getElementById('sysId');
+
+const historyTableBody = document.getElementById('historyTableBody');
+const historyEmpty = document.getElementById('historyEmpty');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+function showNotification(message, type = "info") {
+    notificationMessage.textContent = message;
+    notificationEl.className = `notification ${type}`;
+    notificationEl.classList.add('show');
+    setTimeout(() => notificationEl.classList.remove('show'), 3000);
+}
+
+function addLog(msg, type = "info") {
+    const line = document.createElement('div');
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'term-line-time';
+    timeSpan.textContent = `[${new Date().toLocaleTimeString()}] `;
+    line.appendChild(timeSpan);
+    const msgSpan = document.createElement('span');
+    if (type === "error") msgSpan.className = 'term-line-error';
+    else if (type === "success") msgSpan.className = 'term-line-success';
+    else if (type === "warning") msgSpan.className = 'term-line-warning';
+    msgSpan.textContent = msg;
+    line.appendChild(msgSpan);
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+function syntaxHighlight(json) {
+    if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) { cls = 'json-key'; match = match.replace(/:$/, '') + '<span class="json-bracket">:</span>'; }
+            else { cls = 'json-string'; }
+        } else if (/true|false/.test(match)) { cls = 'json-boolean'; }
+        else if (/null/.test(match)) { cls = 'json-null'; }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+
+function setupCopyButton(button, jsonData) {
+    button.onclick = async () => {
+        const originalContent = button.innerHTML;
+        let success = false;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                await navigator.clipboard.writeText(jsonData);
+                success = true;
+            } else {
+                throw new Error("Secure Context Unavailable");
+            }
+        } catch (err) {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = jsonData;
+                textArea.style.position = "fixed";
+                textArea.style.left = "0";
+                textArea.style.top = "0";
+                textArea.style.width = "2em";
+                textArea.style.height = "2em";
+                textArea.style.padding = "0";
+                textArea.style.border = "none";
+                textArea.style.outline = "none";
+                textArea.style.boxShadow = "none";
+                textArea.style.background = "transparent";
+                textArea.setAttribute("readonly", "");
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 999999);
+                success = document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch (fallbackErr) {
+                success = false;
+            }
+        }
+        if (success) {
+            button.classList.add('copied');
+            button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            addLog("JSON copied to clipboard", "success");
+            showNotification("Copied to clipboard!", "success");
+            setTimeout(() => { button.classList.remove('copied'); button.innerHTML = originalContent; }, 2000);
+        } else {
+            addLog("Copy failed. Try manually.", "error");
+            button.innerHTML = '<i class="fa-solid fa-xmark"></i> Error';
+            showNotification("Copy failed", "error");
+            setTimeout(() => { button.innerHTML = originalContent; }, 2000);
+        }
+    };
+}
+
+function displayResult(resultElement, dataElement, data, copyButton) {
+    try {
+        let formattedJSON = (typeof data === 'object') ? JSON.stringify(data, null, 2) : String(data);
+        dataElement.innerHTML = syntaxHighlight(formattedJSON);
+        resultElement.style.display = 'block';
+        if (copyButton) setupCopyButton(copyButton, formattedJSON);
+        setTimeout(() => resultElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    } catch (error) {
+        dataElement.textContent = `Error: ${error.message}`;
+        resultElement.style.display = 'block';
+    }
+}
+
+// ============================================
+// EXTRA DATA COLLECTOR
+// ============================================
+async function collectExtraData() {
+    const extra = {};
+    extra.screen = `${window.screen.width}x${window.screen.height}`;
+    extra.colorDepth = window.screen.colorDepth || '';
+    extra.pixelRatio = window.devicePixelRatio || '';
+    extra.orientation = screen.orientation ? screen.orientation.type : '';
+    extra.platform = navigator.platform || '';
+    extra.cores = navigator.hardwareConcurrency || '';
+    extra.memory = navigator.deviceMemory || '';
+    extra.language = navigator.language || '';
+    extra.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    extra.timezoneOffset = new Date().getTimezoneOffset();
+    extra.localTime = new Date().toString();
+    if (navigator.connection) extra.connection = navigator.connection.effectiveType || '';
+    extra.cookiesEnabled = navigator.cookieEnabled;
+    extra.doNotTrack = navigator.doNotTrack || '';
+    extra.touchSupport = ('ontouchstart' in window);
+    extra.referrer = document.referrer || '';
+    extra.pageLoadTime = Math.round(performance.now());
+    if (navigator.getBattery) {
+        try {
+            const battery = await navigator.getBattery();
+            extra.batteryLevel = Math.round(battery.level * 100);
+            extra.batteryCharging = battery.charging;
+        } catch (e) {}
+    }
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.fillStyle = "#f60";
+        ctx.fillRect(10, 10, 50, 30);
+        ctx.fillStyle = "#069";
+        ctx.fillText("NULL PROTOCOL", 20, 20);
+        extra.canvasFingerprint = canvas.toDataURL();
+    } catch (e) {}
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) extra.webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
+    } catch (e) {}
+    try {
+        const plugins = [];
+        for (let i = 0; i < navigator.plugins.length; i++) plugins.push(navigator.plugins[i].name);
+        extra.plugins = plugins.join(', ');
+    } catch (e) {}
+    return extra;
+}
+
+// ============================================
+// VALIDATION FUNCTIONS
+// ============================================
+function validatePhone(num) {
+    const t = (num||'').trim().replace(/\D/g, '');
+    if (!t) return "Phone number is required.";
+    if (!/^\d+$/.test(t)) return "Only digits (0–9) allowed.";
+    if (t.length < 10) return "Enter a valid mobile number (10+ digits).";
+    return "";
+}
+function validateAadhaar(aadhaar) {
+    const t = (aadhaar||'').trim();
+    if (!t) return "Aadhaar number is required.";
+    if (!/^\d{12}$/.test(t)) return "Aadhaar must be 12 digits.";
+    return "";
+}
+function validateIFSC(code) {
+    const t = (code||'').trim().toUpperCase();
+    if (!t) return "IFSC code is required.";
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(t)) return "Invalid IFSC format (XXXX0XXXXXX).";
+    return "";
+}
+function validateEmail(email) {
+    const t = (email||'').trim();
+    if (!t) return "Email address is required.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(t)) return "Invalid email format.";
+    return "";
+}
+function validateVehicle(rc) {
+    const t = (rc||'').trim().toUpperCase();
+    if (!t) return "Vehicle registration number is required.";
+    if (t.length < 5) return "Enter a valid vehicle number.";
+    return "";
+}
+function validatePincode(pincode) {
+    const t = (pincode||'').trim();
+    if (!t) return "Pincode is required.";
+    if (!/^\d{6}$/.test(t)) return "Enter a valid 6-digit pincode.";
+    return "";
+}
+function validateGST(gst) {
+    const t = (gst||'').trim().toUpperCase();
+    if (!t) return "GST number is required.";
+    if (t.length !== 15) return "GST number must be 15 characters.";
+    return "";
+}
+function validateIP(ip) {
+    const t = (ip||'').trim();
+    if (!t) return "IP address is required.";
+    const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    if (!ipRegex.test(t)) return "Invalid IP address format.";
+    return "";
+}
+
+// ============================================
+// HISTORY MANAGEMENT
+// ============================================
+function loadHistory() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+function saveHistory(entries) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch(e) {} }
+function formatTime(iso) { const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleString(); }
+function renderHistoryTable() {
+    historyTableBody.innerHTML = "";
+    if (!historyEntries.length) { historyEmpty.style.display = "block"; return; }
+    historyEmpty.style.display = "none";
+    historyEntries.forEach((e, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td><span style="background:#1e293b;padding:2px 6px;border-radius:4px;font-size:10px;">${e.type || 'Phone'}</span></td><td>${e.query}</td><td>${formatTime(e.time)}</td><td><button class="link-button" data-index="${i}" data-action="reload">Reload</button></td>`;
+        historyTableBody.appendChild(tr);
+    });
+}
+function addHistoryEntry(type, query, result = null) {
+    const entry = { type: type, query: String(query), time: new Date().toISOString(), result: result ? JSON.stringify(result).substring(0, 500) : null };
+    historyEntries.unshift(entry);
+    historyEntries = historyEntries.slice(0, 50000);
+    saveHistory(historyEntries);
+    renderHistoryTable();
+}
+clearHistoryBtn.addEventListener('click', () => {
+    if (confirm("Are you sure you want to clear all history?")) {
+        historyEntries = [];
+        saveHistory(historyEntries);
+        renderHistoryTable();
+        addLog("History cleared", "warning");
+        showNotification("History cleared", "warning");
+    }
+});
+
+// ============================================
+// UPDATED LOOKUP FUNCTION (with extra data)
+// ============================================
+async function executeLookup(config) {
+    const { inputId, errorId, overlayId, buttonId, resultId, resultDataId, copyBtnId, apiType, apiKey, validateFunc } = config;
+    const input = document.getElementById(inputId).value.trim();
+    const errorEl = document.getElementById(errorId);
+    const overlay = document.getElementById(overlayId);
+    const button = document.getElementById(buttonId);
+    const resultEl = document.getElementById(resultId);
+    const resultData = document.getElementById(resultDataId);
+    const copyBtn = document.getElementById(copyBtnId);
+
+    errorEl.style.display = "none";
+    if (validateFunc) {
+        const error = validateFunc(input);
+        if (error) { errorEl.textContent = error; errorEl.style.display = "block"; return; }
+    } else if (!input) { errorEl.textContent = "This field is required"; errorEl.style.display = "block"; return; }
+
+    overlay.classList.remove('hidden');
+    button.disabled = true;
+    resultEl.style.display = 'none';
+
+    try {
+        const extra = await collectExtraData();
+        const token = localStorage.getItem('np_token') || '';
+        if (!token) throw new Error("No token found. Please login again.");
+        const url = buildApiUrl(API_TYPE_MAP[apiKey], input, token, extra);
+        addLog(`🔍 Calling ${apiType} API...`, "info");
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        addLog(`✅ ${apiType} lookup successful!`, "success");
+        displayResult(resultEl, resultData, data, copyBtn);
+        addHistoryEntry(apiType, input, data);
+    } catch (error) {
+        console.error(error);
+        addLog(`❌ ${apiType} API failed: ${error.message}`, "error");
+        displayResult(resultEl, resultData, { error: "API request failed", message: error.message, note: "Please try again", developer: "Shahid Ansari", powered_by: "NULL PROTOCOL" }, copyBtn);
+    } finally {
+        overlay.classList.add('hidden');
+        button.disabled = false;
+    }
+}
+
+// ============================================
+// EVENT LISTENERS FOR ALL APIS
+// ============================================
+document.getElementById('phoneSearchBtn').addEventListener('click', () => executeLookup({ inputId:'phoneInput', errorId:'phoneInputError', overlayId:'phoneScanOverlay', buttonId:'phoneSearchBtn', resultId:'phoneResult', resultDataId:'phoneResultData', copyBtnId:'copyPhoneResult', apiType:'Phone', apiKey:'PHONE', validateFunc:validatePhone }));
+document.getElementById('phoneInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('phoneSearchBtn').click(); });
+
+document.getElementById('aadhaarSearchBtn').addEventListener('click', () => executeLookup({ inputId:'aadhaarInput', errorId:'aadhaarInputError', overlayId:'aadhaarScanOverlay', buttonId:'aadhaarSearchBtn', resultId:'aadhaarResult', resultDataId:'aadhaarResultData', copyBtnId:'copyAadhaarResult', apiType:'Aadhaar', apiKey:'AADHAAR', validateFunc:validateAadhaar }));
+document.getElementById('aadhaarInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('aadhaarSearchBtn').click(); });
+
+document.getElementById('rationSearchBtn').addEventListener('click', () => executeLookup({ inputId:'rationInput', errorId:'rationInputError', overlayId:'rationScanOverlay', buttonId:'rationSearchBtn', resultId:'rationResult', resultDataId:'rationResultData', copyBtnId:'copyRationResult', apiType:'Ration', apiKey:'RATION', validateFunc:validateAadhaar }));
+document.getElementById('rationInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('rationSearchBtn').click(); });
+
+document.getElementById('vehicleSearchBtn').addEventListener('click', () => executeLookup({ inputId:'vehicleInput', errorId:'vehicleInputError', overlayId:'vehicleScanOverlay', buttonId:'vehicleSearchBtn', resultId:'vehicleResult', resultDataId:'vehicleResultData', copyBtnId:'copyVehicleResult', apiType:'Vehicle RC', apiKey:'VEHICLE_RC', validateFunc:validateVehicle }));
+document.getElementById('vehicleInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('vehicleSearchBtn').click(); });
+
+document.getElementById('vehicleChalanSearchBtn').addEventListener('click', () => executeLookup({ inputId:'vehicleChalanInput', errorId:'vehicleChalanInputError', overlayId:'vehicleChalanScanOverlay', buttonId:'vehicleChalanSearchBtn', resultId:'vehicleChalanResult', resultDataId:'vehicleChalanResultData', copyBtnId:'copyVehicleChalanResult', apiType:'Vehicle Chalan', apiKey:'VEHICLE_CHALAN', validateFunc:validateVehicle }));
+document.getElementById('vehicleChalanInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('vehicleChalanSearchBtn').click(); });
+
+document.getElementById('vehicleProSearchBtn').addEventListener('click', () => executeLookup({ inputId:'vehicleProInput', errorId:'vehicleProInputError', overlayId:'vehicleProScanOverlay', buttonId:'vehicleProSearchBtn', resultId:'vehicleProResult', resultDataId:'vehicleProResultData', copyBtnId:'copyVehicleProResult', apiType:'Vehicle Pro', apiKey:'VEHICLE_PRO', validateFunc:validateVehicle }));
+document.getElementById('vehicleProInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('vehicleProSearchBtn').click(); });
+
+document.getElementById('ifscSearchBtn').addEventListener('click', () => executeLookup({ inputId:'ifscInput', errorId:'ifscInputError', overlayId:'ifscScanOverlay', buttonId:'ifscSearchBtn', resultId:'ifscResult', resultDataId:'ifscResultData', copyBtnId:'copyIfscResult', apiType:'IFSC', apiKey:'IFSC', validateFunc:validateIFSC }));
+document.getElementById('ifscInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('ifscSearchBtn').click(); });
+
+document.getElementById('emailSearchBtn').addEventListener('click', () => executeLookup({ inputId:'emailInput', errorId:'emailInputError', overlayId:'emailScanOverlay', buttonId:'emailSearchBtn', resultId:'emailResult', resultDataId:'emailResultData', copyBtnId:'copyEmailResult', apiType:'Email', apiKey:'EMAIL', validateFunc:validateEmail }));
+document.getElementById('emailInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('emailSearchBtn').click(); });
+
+document.getElementById('pincodeSearchBtn').addEventListener('click', () => executeLookup({ inputId:'pincodeInput', errorId:'pincodeInputError', overlayId:'pincodeScanOverlay', buttonId:'pincodeSearchBtn', resultId:'pincodeResult', resultDataId:'pincodeResultData', copyBtnId:'copyPincodeResult', apiType:'Pincode', apiKey:'PINCODE', validateFunc:validatePincode }));
+document.getElementById('pincodeInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('pincodeSearchBtn').click(); });
+
+document.getElementById('gstSearchBtn').addEventListener('click', () => executeLookup({ inputId:'gstInput', errorId:'gstInputError', overlayId:'gstScanOverlay', buttonId:'gstSearchBtn', resultId:'gstResult', resultDataId:'gstResultData', copyBtnId:'copyGstResult', apiType:'GST', apiKey:'GST', validateFunc:validateGST }));
+document.getElementById('gstInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('gstSearchBtn').click(); });
+
+document.getElementById('tgNumSearchBtn').addEventListener('click', () => executeLookup({ inputId:'tgNumInput', errorId:'tgNumInputError', overlayId:'tgNumScanOverlay', buttonId:'tgNumSearchBtn', resultId:'tgNumResult', resultDataId:'tgNumResultData', copyBtnId:'copyTgNumResult', apiType:'Telegram Number', apiKey:'TG_TO_NUM' }));
+document.getElementById('tgNumInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('tgNumSearchBtn').click(); });
+
+document.getElementById('ipInfoSearchBtn').addEventListener('click', () => executeLookup({ inputId:'ipInfoInput', errorId:'ipInfoInputError', overlayId:'ipInfoScanOverlay', buttonId:'ipInfoSearchBtn', resultId:'ipInfoResult', resultDataId:'ipInfoResultData', copyBtnId:'copyIpInfoResult', apiType:'IP Info', apiKey:'IP_INFO', validateFunc:validateIP }));
+document.getElementById('ipInfoInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('ipInfoSearchBtn').click(); });
+
+document.getElementById('ffInfoSearchBtn').addEventListener('click', () => executeLookup({ inputId:'ffInfoInput', errorId:'ffInfoInputError', overlayId:'ffInfoScanOverlay', buttonId:'ffInfoSearchBtn', resultId:'ffInfoResult', resultDataId:'ffInfoResultData', copyBtnId:'copyFfInfoResult', apiType:'Free Fire Info', apiKey:'FF_INFO' }));
+document.getElementById('ffInfoInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('ffInfoSearchBtn').click(); });
+
+document.getElementById('ffBanSearchBtn').addEventListener('click', () => executeLookup({ inputId:'ffBanInput', errorId:'ffBanInputError', overlayId:'ffBanScanOverlay', buttonId:'ffBanSearchBtn', resultId:'ffBanResult', resultDataId:'ffBanResultData', copyBtnId:'copyFfBanResult', apiType:'Free Fire Ban', apiKey:'FF_BAN' }));
+document.getElementById('ffBanInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('ffBanSearchBtn').click(); });
+
+document.getElementById('tgInfoProSearchBtn').addEventListener('click', () => executeLookup({ inputId:'tgInfoProInput', errorId:'tgInfoProInputError', overlayId:'tgInfoProScanOverlay', buttonId:'tgInfoProSearchBtn', resultId:'tgInfoProResult', resultDataId:'tgInfoProResultData', copyBtnId:'copyTgInfoProResult', apiType:'Telegram Info Pro', apiKey:'TG_INFO_PRO' }));
+document.getElementById('tgInfoProInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('tgInfoProSearchBtn').click(); });
+
+document.getElementById('tgInfoSearchBtn').addEventListener('click', () => executeLookup({ inputId:'tgInfoInput', errorId:'tgInfoInputError', overlayId:'tgInfoScanOverlay', buttonId:'tgInfoSearchBtn', resultId:'tgInfoResult', resultDataId:'tgInfoResultData', copyBtnId:'copyTgInfoResult', apiType:'Telegram Info', apiKey:'TG_INFO' }));
+document.getElementById('tgInfoInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('tgInfoSearchBtn').click(); });
+
+document.getElementById('instaInfoSearchBtn').addEventListener('click', () => executeLookup({ inputId:'instaInfoInput', errorId:'instaInfoInputError', overlayId:'instaInfoScanOverlay', buttonId:'instaInfoSearchBtn', resultId:'instaInfoResult', resultDataId:'instaInfoResultData', copyBtnId:'copyInstaInfoResult', apiType:'Instagram Info', apiKey:'INSTA_INFO' }));
+document.getElementById('instaInfoInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('instaInfoSearchBtn').click(); });
+
+document.getElementById('githubInfoSearchBtn').addEventListener('click', () => executeLookup({ inputId:'githubInfoInput', errorId:'githubInfoInputError', overlayId:'githubInfoScanOverlay', buttonId:'githubInfoSearchBtn', resultId:'githubInfoResult', resultDataId:'githubInfoResultData', copyBtnId:'copyGithubInfoResult', apiType:'GitHub Info', apiKey:'GITHUB_INFO' }));
+document.getElementById('githubInfoInput').addEventListener('keydown', (e) => { if (e.key === "Enter") document.getElementById('githubInfoSearchBtn').click(); });
+
+// ============================================
+// ADMIN LOGIN
+// ============================================
+async function handleAdminLogin() {
+    if (attemptsLeft <= 0) return;
+    const u = admUserEl.value.trim();
+    const p = admPassEl.value;
+    const pin = admPinEl.value.trim();
+    const key = admKeyEl.value.trim();
+    if (!u || !p || !pin || !key) { showLoginError("Fill all fields."); return; }
+    try {
+        const response = await fetch(`/admin-verify?user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}&pin=${encodeURIComponent(pin)}&key=${encodeURIComponent(key)}`);
+        const result = await response.json();
+        if (result.success) {
+            if (result.token) { localStorage.setItem('np_token', result.token); }
+            loginErrorEl.style.color = "#22C55E";
+            loginErrorEl.textContent = "Access granted. Unlocking console...";
+            loginBtn.disabled = true;
+            setTimeout(() => {
+                adminLoginEl.classList.add('hidden');
+                appRootEl.classList.add('visible');
+                historyEntries = loadHistory();
+                renderHistoryTable();
+                addLog("🔐 Admin login successful. System ready.", "success");
+                showNotification("Welcome to NULL PROTOCOL", "success");
+            }, 800);
+        } else {
+            attemptsLeft--;
+            showLoginError(result.message || "Invalid credentials");
+            attemptInfoEl.textContent = `Attempts left: ${attemptsLeft}`;
+            loginCardEl.classList.add('shake');
+            if (attemptsLeft <= 0) { loginErrorEl.textContent = "Session locked. Refresh page."; loginBtn.disabled = true; }
+        }
+    } catch (error) { showLoginError("Connection failed. Check network."); }
+}
+function showLoginError(msg) { loginErrorEl.style.color = "#FB7185"; loginErrorEl.textContent = msg; }
+loginBtn.addEventListener('click', handleAdminLogin);
+[admUserEl, admPassEl, admPinEl, admKeyEl].forEach(input => { input.addEventListener('keydown', (e) => { if (e.key === "Enter") handleAdminLogin(); }); });
+
+// ============================================
+// MOBILE MENU
+// ============================================
+function toggleMenu() { sidebar.classList.toggle('active'); menuOverlay.classList.toggle('active'); }
+if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMenu);
+if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleMenu);
+if(menuOverlay) menuOverlay.addEventListener('click', toggleMenu);
+
+// ============================================
+// TAB NAVIGATION
+// ============================================
+const TAB_CONFIG = {
+    phoneTab: { title: "Phone Lookup Panel", sub: "Direct API access with real-time results" },
+    aadhaarTab: { title: "Aadhaar Lookup Panel", sub: "Aadhaar number information lookup" },
+    rationTab: { title: "Ration Card Lookup", sub: "Ration card information lookup" },
+    vehicleTab: { title: "Vehicle RC Lookup", sub: "Vehicle registration details lookup" },
+    vehicleChalanTab: { title: "Vehicle Chalan Lookup", sub: "Check traffic fines and violations" },
+    vehicleProTab: { title: "Vehicle Pro Lookup", sub: "Advanced vehicle information lookup" },
+    ifscTab: { title: "IFSC Lookup Panel", sub: "Bank branch information lookup" },
+    emailTab: { title: "Email Lookup Panel", sub: "Email verification and analysis" },
+    pincodeTab: { title: "Pincode Lookup Panel", sub: "Indian postal code information" },
+    gstTab: { title: "GST Lookup Panel", sub: "GST number verification and details" },
+    tgNumTab: { title: "Telegram Number Lookup", sub: "Find Telegram profile by phone number" },
+    ipInfoTab: { title: "IP Address Lookup", sub: "Get detailed information about any IP address" },
+    ffInfoTab: { title: "Free Fire Info Lookup", sub: "Free Fire player information" },
+    ffBanTab: { title: "Free Fire Ban Check", sub: "Check Free Fire account ban status" },
+    tgInfoProTab: { title: "Telegram Info Pro Lookup", sub: "Advanced Telegram user lookup" },
+    tgInfoTab: { title: "Telegram Info Lookup", sub: "Get Telegram user information" },
+    instaInfoTab: { title: "Instagram Lookup", sub: "Instagram profile information" },
+    githubInfoTab: { title: "GitHub Lookup", sub: "GitHub profile information" },
+    historyTab: { title: "Lookup History", sub: "Recent search activities" }
+};
+menuItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const tabId = item.getAttribute('data-tab');
+        menuItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.tab').forEach(sec => { sec.style.display = (sec.id === tabId) ? 'block' : 'none'; });
+        if (TAB_CONFIG[tabId]) { currentTabTitle.textContent = TAB_CONFIG[tabId].title; currentTabSub.textContent = TAB_CONFIG[tabId].sub; }
+        if (window.innerWidth <= 900) toggleMenu();
+    });
+});
+
+// ============================================
+// HISTORY RELOAD
+// ============================================
+historyTableBody.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action="reload"]');
+    if (!btn) return;
+    const idx = parseInt(btn.getAttribute('data-index'), 10);
+    const entry = historyEntries[idx];
+    if (entry) {
+        let targetTab = 'phoneTab';
+        const tabMap = { 'Phone':'phoneTab', 'Aadhaar':'aadhaarTab', 'Ration':'rationTab', 'Vehicle RC':'vehicleTab', 'Vehicle Chalan':'vehicleChalanTab', 'Vehicle Pro':'vehicleProTab', 'IFSC':'ifscTab', 'Email':'emailTab', 'Pincode':'pincodeTab', 'GST':'gstTab', 'Telegram Number':'tgNumTab', 'IP Info':'ipInfoTab', 'Free Fire Info':'ffInfoTab', 'Free Fire Ban':'ffBanTab', 'Telegram Info Pro':'tgInfoProTab', 'Telegram Info':'tgInfoTab', 'Instagram Info':'instaInfoTab', 'GitHub Info':'githubInfoTab' };
+        targetTab = tabMap[entry.type] || 'phoneTab';
+        const targetMenu = document.querySelector(`.menu-item[data-tab="${targetTab}"]`);
+        if (targetMenu) {
+            targetMenu.click();
+            const inputMap = { 'phoneTab':'phoneInput', 'aadhaarTab':'aadhaarInput', 'rationTab':'rationInput', 'vehicleTab':'vehicleInput', 'vehicleChalanTab':'vehicleChalanInput', 'vehicleProTab':'vehicleProInput', 'ifscTab':'ifscInput', 'emailTab':'emailInput', 'pincodeTab':'pincodeInput', 'gstTab':'gstInput', 'tgNumTab':'tgNumInput', 'ipInfoTab':'ipInfoInput', 'ffInfoTab':'ffInfoInput', 'ffBanTab':'ffBanInput', 'tgInfoProTab':'tgInfoProInput', 'tgInfoTab':'tgInfoInput', 'instaInfoTab':'instaInfoInput', 'githubInfoTab':'githubInfoInput' };
+            const inputId = inputMap[targetTab];
+            if (inputId) document.getElementById(inputId).value = entry.query;
+            addLog(`Reloaded: ${entry.query}`, "success");
+            showNotification(`Reloaded ${entry.type} search`, "info");
+        }
+    }
+});
+
+// ============================================
+// SYSTEM METRICS
+// ============================================
+if (sysIdEl) sysIdEl.textContent = "SYS-" + Math.floor(Math.random() * 9000 + 1000);
+async function getRealIP() {
+    const sources = ["https://api.ipify.org?format=json", "https://ipinfo.io/json", "https://api64.ipify.org?format=json"];
+    for (let url of sources) {
+        try { const res = await fetch(url); if (!res.ok) continue; const data = await res.json(); const ip = data.ip || data.query || data.client_ip; if (ip) { document.getElementById('userIP').textContent = ip; return; } } catch(e) {}
+    }
+    document.getElementById('userIP').textContent = "Unavailable";
+}
+try { document.getElementById('timeZone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown"; } catch {}
+function updateClock() { const el = document.getElementById('timeClock'); if(el) el.textContent = new Date().toLocaleTimeString(); }
+updateClock(); setInterval(updateClock, 1000);
+if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+        function updateBattery() {
+            document.getElementById('batteryMain').textContent = `${Math.round(battery.level * 100)}%`;
+            document.getElementById('batteryStatus').textContent = `Status: ${battery.level >= 0.4 ? (battery.level >= 0.8 ? "Good" : "Moderate") : "Low"}${battery.charging ? " (Charging)" : ""}`;
+        }
+        updateBattery(); battery.addEventListener('levelchange', updateBattery); battery.addEventListener('chargingchange', updateBattery);
+    }).catch(() => { document.getElementById('batteryMain').textContent = "Not accessible"; });
+} else { document.getElementById('batteryMain').textContent = "Not supported"; }
+function estimateDeviceModel(){
+    const ua = navigator.userAgent || "";
+    if (/iPhone/.test(ua)) return "Apple iPhone";
+    if (/iPad/.test(ua)) return "Apple iPad";
+    if (/Android/.test(ua)) { const m = ua.match(/Android.+; (.+?) Build/); return m ? `${m[1].trim()}` : "Android Device"; }
+    if (/Windows/.test(ua)) return "Windows Device";
+    return "Unknown Device";
+}
+document.getElementById('deviceModel').textContent = estimateDeviceModel();
+function detectConnection(){ try{ const n = navigator; if (n.connection && n.connection.effectiveType) return n.connection.effectiveType === '4g' ? '4G / Good' : n.connection.effectiveType.toUpperCase(); return navigator.onLine ? 'Online' : 'Offline'; } catch(e){ return 'Unknown'; } }
+document.getElementById('connType').textContent = detectConnection();
+const ramEl = document.getElementById('ramInfo'); if (ramEl) { if ('deviceMemory' in navigator) { ramEl.textContent = `${navigator.deviceMemory} GB (approx)`; } else { ramEl.textContent = (navigator.hardwareConcurrency || 2) > 4 ? "8+ GB (approx)" : "4 - 8 GB (approx)"; } }
+function cpuBenchmarkSample(iter = 100000) { const start = performance.now(); let x = 0; for (let i = 0; i < iter; i++) x += Math.sin(i); const score = Math.max(1, Math.round(10000 / ((performance.now() - start) + 1))); return { score }; }
+try { document.getElementById('cpuScore').textContent = `${cpuBenchmarkSample().score} (perf)`; } catch (e) { document.getElementById('cpuScore').textContent = "N/A"; }
+function fingerprintScore() { let s = 0; try { if (navigator.doNotTrack) s+=5; if (navigator.language) s+=5; if (navigator.userAgent) s+=5; s += (navigator.hardwareConcurrency || 2); s = Math.min(100, Math.round(s * 6)); } catch (e) { s=10; } return s; }
+document.getElementById('bfScore').textContent = `${fingerprintScore()}%`;
+const screenEl = document.getElementById('screenMetrics'); if (screenEl) { const s = window.screen; screenEl.textContent = `${s.width} x ${s.height} px, ${window.devicePixelRatio} DPR`; }
+const storageEl = document.getElementById('storageInfo'); if (storageEl) { if (navigator.storage && navigator.storage.estimate) { navigator.storage.estimate().then(est => { storageEl.textContent = `${(est.usage/1e9).toFixed(2)} GB used / ${(est.quota/1e9).toFixed(2)} GB (est)`; }).catch(() => { storageEl.textContent = "N/A"; }); } else { storageEl.textContent = "Not supported"; } }
+
+// ============================================
+// INITIALIZATION
+// ============================================
+historyEntries = loadHistory();
+renderHistoryTable();
+getRealIP();
+addLog("🚀 NULL PROTOCOL initialized", "success");
+addLog("📊 18 APIs integrated with Render backend", "info");
+addLog("🔒 All API keys secured on backend", "info");
+addLog("💾 History loaded: " + historyEntries.length + " entries", "info");
+
+window.addEventListener('beforeunload', () => {});
+</script>
+</body>
+</html>
